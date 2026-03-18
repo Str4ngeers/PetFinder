@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>PetFinder</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--bg:#0f0f1a;--surface:#1a1a2e;--accent:#e8c86d;--accent2:#f4a261;--text:#f0ece2;--muted:#8a8a9a;--danger:#e76f51;--success:#52b788;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);--r:20px;--rs:12px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:"DM Sans",sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+body::before{content:"";position:fixed;top:-30%;right:-20%;width:600px;height:600px;background:radial-gradient(circle,rgba(232,200,109,.08),transparent 70%);pointer-events:none;z-index:0}
+body::after{content:"";position:fixed;bottom:-20%;left:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(244,162,97,.06),transparent 70%);pointer-events:none;z-index:0}
+.screen{display:none;min-height:100dvh;position:relative;z-index:1;animation:fadeIn .3s ease;flex-direction:column}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.hdr{padding:60px 24px 24px;display:flex;align-items:center;gap:12px}
+.back{width:40px;height:40px;background:var(--card);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
+.htitle{font-family:"Playfair Display",serif;font-size:26px;font-weight:700}
+.logo{font-family:"Playfair Display",serif;font-size:22px;font-weight:900;color:var(--accent)}
+.body{flex:1;overflow-y:auto;padding:0 24px 120px;-webkit-overflow-scrolling:touch}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(15,15,26,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:12px 0 28px;z-index:100}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 0}
+.ni .ico{font-size:22px}
+.ni .lbl{font-size:10px;color:var(--muted);letter-spacing:.5px;font-weight:500}
+.ni.on .lbl{color:var(--accent)}
+.ni.on .ico{filter:drop-shadow(0 0 6px rgba(232,200,109,.6))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.btn{display:block;width:100%;padding:16px 24px;border-radius:var(--rs);font-family:"DM Sans",sans-serif;font-size:16px;font-weight:600;cursor:pointer;border:none;transition:all .2s;text-align:center}
+.btnp{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1a2e}
+.btnp:active{opacity:.85}
+.btns{background:var(--card);border:1px solid var(--border);color:var(--text)}
+.btnd{background:rgba(231,111,81,.12);border:1px solid rgba(231,111,81,.3);color:var(--danger)}
+.btn+.btn{margin-top:10px}
+.fg{margin-bottom:16px}
+.lbl2{display:block;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.inp{width:100%;padding:14px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:"DM Sans",sans-serif;font-size:16px;transition:border-color .2s;-webkit-appearance:none}
+.inp:focus{outline:none;border-color:var(--accent);background:rgba(232,200,109,.04)}
+.inp::placeholder{color:var(--muted)}
+select.inp{appearance:none}
+textarea.inp{resize:none}
+.pwrap{position:relative}
+.pwrap .inp{padding-right:48px}
+.peye{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:18px;background:none;border:none;color:var(--muted)}
+.photow{width:140px;height:140px;margin:0 auto 20px;border-radius:50%;background:var(--card);border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden}
+.photow img{width:100%;height:100%;object-fit:cover;position:absolute}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600}
+.bg{background:rgba(232,200,109,.15);color:var(--accent)}
+.bs{background:rgba(82,183,136,.15);color:var(--success)}
+.bd{background:rgba(231,111,81,.15);color:var(--danger)}
+.pcard{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .2s}
+.pcard:hover{border-color:rgba(232,200,109,.3)}
+.ava{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden}
+.ava img,.ava-big img{width:100%;height:100%;object-fit:cover}
+.ava-big{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 16px}
+.irow{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}
+.irow:last-child{border-bottom:none}
+.ik{color:var(--muted)}
+.iv{font-weight:500;text-align:right;max-width:60%}
+.qrw{background:#fff;border-radius:var(--r);padding:20px;display:flex;align-items:center;justify-content:center;margin:20px 0}
+.stitle{font-family:"Playfair Display",serif;font-size:22px;font-weight:700;margin-bottom:16px}
+.ssub{font-size:14px;color:var(--muted);margin-top:-10px;margin-bottom:20px;line-height:1.6}
+.appname{font-family:"Playfair Display",serif;font-size:42px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.frow{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:14px 16px;margin-bottom:12px}
+.chip{padding:8px 16px;border-radius:999px;border:1px solid var(--border);font-size:14px;font-weight:500;cursor:pointer;background:var(--card);transition:all .2s;font-family:"DM Sans",sans-serif}
+.chip.on{border-color:var(--accent);background:rgba(232,200,109,.12);color:var(--accent)}
+.chipg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.rcard{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;margin-bottom:10px}
+.rcard input[type=radio]{accent-color:var(--accent);width:18px;height:18px;flex-shrink:0}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.tdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.tdot.on{background:var(--success);box-shadow:0 0 6px var(--success)}
+.tdot.off{background:var(--muted)}
+.sbanner{background:linear-gradient(135deg,rgba(82,183,136,.15),rgba(82,183,136,.05));border:1px solid rgba(82,183,136,.3);border-radius:var(--r);padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px;cursor:pointer}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:12px 24px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.movl{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-end}
+.movl.open{display:flex}
+.modal{background:#1a1a2e;border-radius:28px 28px 0 0;padding:28px 24px 48px;width:100%;max-height:90dvh;overflow-y:auto;animation:sUp .35s ease}
+@keyframes sUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:40px;height:4px;background:var(--border);border-radius:999px;margin:0 auto 24px}
+.mtitle{font-family:"Playfair Display",serif;font-size:22px;font-weight:700;margin-bottom:20px}
+.fhero{padding:60px 24px 30px;text-align:center}
+.ficon{font-size:72px;display:block;margin-bottom:20px;animation:bounce 1s ease infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.ftitle{font-family:"Playfair Display",serif;font-size:32px;font-weight:900;line-height:1.2;margin-bottom:12px}
+.cbtn{display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:var(--r);border:1px solid var(--border);background:var(--card);cursor:pointer;margin-bottom:12px;text-decoration:none;color:var(--text);transition:all .2s}
+.cbtn:hover{border-color:var(--accent)}
+.cico{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.mapbox{background:rgba(82,183,136,.08);border:1px solid rgba(82,183,136,.2);border-radius:var(--r);padding:20px;text-align:center;margin:16px 0}
+::-webkit-scrollbar{width:0}
+</style>
+</head>
+<body>
+<div class="toast" id="T"></div>
+
+<!-- WELCOME -->
+<div class="screen active" id="sw">
+<div class="body" style="padding-top:0">
+<div style="text-align:center;padding:80px 0 40px"><span style="font-size:72px">🐾</span><div class="appname">PetFinder</div><p style="font-size:16px;color:var(--muted);margin-top:8px;line-height:1.6">Ritrova il tuo amico a quattro zampe, sempre</p></div>
+<div class="frow"><span style="font-size:24px">📱</span><div style="font-size:14px;color:var(--muted)"><strong style="color:var(--text);display:block;font-size:15px;margin-bottom:2px">Profilo digitale</strong>Crea il profilo del tuo animale con foto e dati</div></div>
+<div class="frow"><span style="font-size:24px">🔍</span><div style="font-size:14px;color:var(--muted)"><strong style="color:var(--text);display:block;font-size:15px;margin-bottom:2px">QR Code istantaneo</strong>Associa il QR della targhetta al tuo pet</div></div>
+<div class="frow"><span style="font-size:24px">🗺️</span><div style="font-size:14px;color:var(--muted)"><strong style="color:var(--text);display:block;font-size:15px;margin-bottom:2px">Localizzazione</strong>Vedi dove è stato trovato il tuo animale</div></div>
+<div class="frow"><span style="font-size:24px">🔔</span><div style="font-size:14px;color:var(--muted)"><strong style="color:var(--text);display:block;font-size:15px;margin-bottom:2px">Notifiche</strong>Avviso quando qualcuno scansiona la targhetta</div></div>
+<button class="btn btnp" onclick="go('sr')">Inizia Ora →</button>
+<button class="btn btns" onclick="go('sl')">Ho già un account</button>
+<div style="height:40px"></div>
+</div>
+</div>
+
+<!-- REGISTER -->
+<div class="screen" id="sr">
+<div class="hdr"><div class="back" onclick="go('sw')">←</div><div class="htitle">Registrazione</div></div>
+<div class="body">
+<p class="ssub">Crea il tuo account per gestire le targhette dei tuoi animali.</p>
+<div class="fg"><label class="lbl2">Nome e Cognome</label><input class="inp" type="text" id="rn" placeholder="Mario Rossi"></div>
+<div class="fg"><label class="lbl2">Email</label><input class="inp" type="email" id="re" placeholder="mario@email.com"></div>
+<div class="fg"><label class="lbl2">Password</label><div class="pwrap"><input class="inp" type="password" id="rp" placeholder="Minimo 6 caratteri"><button class="peye" onclick="tpwd('rp',this)">👁</button></div></div>
+<div class="fg"><label class="lbl2">Conferma Password</label><div class="pwrap"><input class="inp" type="password" id="rp2" placeholder="Ripeti la password"><button class="peye" onclick="tpwd('rp2',this)">👁</button></div></div>
+<div class="fg"><label class="lbl2">Telefono</label><input class="inp" type="tel" id="rt" placeholder="+39 333 1234567"></div>
+<div class="fg"><label class="lbl2">Indirizzo (opzionale)</label><input class="inp" type="text" id="ra" placeholder="Via Roma 1, Milano"></div>
+<div class="fg"><label class="lbl2">Come contattarti</label>
+<div class="chipg" id="rprefs">
+<button class="chip" onclick="tchip(this)">📞 Chiamata</button>
+<button class="chip" onclick="tchip(this)">💬 WhatsApp</button>
+<button class="chip" onclick="tchip(this)">✉️ SMS</button>
+</div></div>
+<button class="btn btnp" onclick="doReg()">Crea Account</button>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="sl">
+<div class="hdr"><div class="back" onclick="go('sw')">←</div><div class="htitle">Accedi</div></div>
+<div class="body">
+<p class="ssub">Inserisci email e password per accedere.</p>
+<div class="fg"><label class="lbl2">Email</label><input class="inp" type="email" id="le" placeholder="mario@email.com"></div>
+<div class="fg"><label class="lbl2">Password</label><div class="pwrap"><input class="inp" type="password" id="lp" placeholder="La tua password"><button class="peye" onclick="tpwd('lp',this)">👁</button></div></div>
+<button class="btn btnp" onclick="doLogin()">Accedi</button>
+<button class="btn btns" onclick="go('sfg')">Password dimenticata?</button>
+</div>
+</div>
+
+<!-- FORGOT -->
+<div class="screen" id="sfg">
+<div class="hdr"><div class="back" onclick="go('sl')">←</div><div class="htitle">Password dimenticata</div></div>
+<div class="body">
+<div style="text-align:center;padding:20px 0 28px;font-size:56px">🔑</div>
+<p class="ssub">Inserisci la tua email per un suggerimento sulla password.</p>
+<div class="fg"><label class="lbl2">Email</label><input class="inp" type="email" id="fge" placeholder="mario@email.com"></div>
+<button class="btn btnp" onclick="doForgot()">Recupera Account</button>
+</div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="shome">
+<div class="hdr"><span class="logo">🐾 PetFinder</span><div style="margin-left:auto"><span class="badge bg">Proprietario</span></div></div>
+<div class="body">
+<div id="notifarea"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+<div class="stitle" style="margin-bottom:0">I miei animali</div>
+<button class="btn btnp" style="width:auto;padding:10px 18px;font-size:14px" onclick="go('sadd')">+ Aggiungi</button>
+</div>
+<div id="petlist"></div>
+</div>
+<div class="bnav">
+<div class="ni on" id="tabhome" onclick="tabH()"><span class="ico">🏠</span><span class="lbl">HOME</span></div>
+<div class="ni" id="tabscan" onclick="tabS()"><span class="ico">📷</span><span class="lbl">SCANSIONA</span></div>
+<div class="ni" id="tabprof" onclick="tabP()"><span class="ico">👤</span><span class="lbl">PROFILO</span></div>
+</div>
+</div>
+
+<!-- ADD PET -->
+<div class="screen" id="sadd">
+<div class="hdr"><div class="back" onclick="go('shome')">←</div><div class="htitle">Nuovo Animale</div></div>
+<div class="body">
+<div class="photow" id="phwrap" onclick="document.getElementById('phfile').click()">
+<span style="font-size:32px">📷</span><span style="font-size:11px;color:var(--muted);margin-top:4px">Aggiungi foto</span>
+</div>
+<input type="file" id="phfile" accept="image/*" style="display:none" onchange="hphoto(this)">
+<div class="fg"><label class="lbl2">Nome</label><input class="inp" type="text" id="pn" placeholder="es. Rex"></div>
+<div class="fg"><label class="lbl2">Tipo</label>
+<select class="inp" id="pt">
+<option value="dog">🐶 Cane</option>
+<option value="cat">🐱 Gatto</option>
+<option value="rabbit">🐰 Coniglio</option>
+<option value="bird">🐦 Uccello</option>
+<option value="other">🐹 Altro</option>
+</select></div>
+<div class="fg"><label class="lbl2">Razza</label><input class="inp" type="text" id="pbr" placeholder="es. Labrador"></div>
+<div class="fg"><label class="lbl2">Colore</label><input class="inp" type="text" id="pc" placeholder="es. Marrone con macchie bianche"></div>
+<div class="fg"><label class="lbl2">Età</label><input class="inp" type="text" id="pa" placeholder="es. 3 anni"></div>
+<div class="fg"><label class="lbl2">Sesso</label><select class="inp" id="ps"><option>Maschio</option><option>Femmina</option></select></div>
+<div class="fg"><label class="lbl2">Segni particolari</label><textarea class="inp" id="pm" rows="3" placeholder="es. Orecchio sinistro spelacchiato..."></textarea></div>
+<div class="fg"><label class="lbl2">Microchip (opzionale)</label><input class="inp" type="text" id="pch" placeholder="Numero microchip"></div>
+<div class="fg"><label class="lbl2">Note mediche (opzionale)</label><textarea class="inp" id="pmed" rows="2" placeholder="es. Allergie, farmaci..."></textarea></div>
+<button class="btn btnp" onclick="doAddPet()">Salva Animale</button>
+</div>
+</div>
+
+<!-- PET DETAIL -->
+<div class="screen" id="sdet">
+<div class="hdr"><div class="back" onclick="go('shome')">←</div><div class="htitle" id="dettitle">Dettaglio</div></div>
+<div class="body" id="detbody"></div>
+</div>
+
+<!-- LINK TAG -->
+<div class="screen" id="slink">
+<div class="hdr"><div class="back" id="linkback">←</div><div class="htitle">Collega Targhetta</div></div>
+<div class="body">
+<div class="card" style="text-align:center;padding:30px 20px">
+<div style="font-size:48px;margin-bottom:16px">🏷️</div>
+<div class="stitle">Codice targhetta</div>
+<p class="ssub" style="text-align:center">Il codice univoco è stampato all'interno della targhetta.</p>
+<div class="fg"><input class="inp" type="text" id="tagcode" placeholder="es. PT-2024-XXXX" style="text-align:center;font-size:18px;letter-spacing:2px;font-weight:600"></div>
+<button class="btn btnp" onclick="doLink()">Collega Targhetta</button>
+</div>
+<div class="card"><div style="font-size:14px;color:var(--muted);line-height:1.7">💡 Una volta collegata, il QR sulla targhetta porterà chiunque alla pagina del tuo animale.</div></div>
+</div>
+</div>
+
+<!-- QR -->
+<div class="screen" id="sqr">
+<div class="hdr"><div class="back" id="qrback">←</div><div class="htitle">QR Code Targhetta</div></div>
+<div class="body">
+<div class="card" style="text-align:center;padding:30px 20px">
+<div style="font-size:14px;color:var(--muted);margin-bottom:8px">Targhetta di</div>
+<div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700" id="qrname"></div>
+<div class="qrw" id="qrbox"></div>
+<div style="font-size:12px;color:var(--muted)" id="qrtag"></div>
+</div>
+<div class="card"><div style="font-size:14px;color:var(--muted);line-height:1.7">📌 QR Code attivo. Chiunque lo scansioni vedrà i dati del tuo animale.</div></div>
+<button class="btn btns" onclick="doShareQR()">📤 Condividi QR Code</button>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen" id="sprof">
+<div class="body" style="padding-top:0">
+<div style="text-align:center;padding:60px 0 30px">
+<div class="ava-big">👤</div>
+<div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700" id="profname"></div>
+<div style="color:var(--muted);margin-top:4px;font-size:15px" id="profphone"></div>
+</div>
+<div class="stitle">Il mio profilo</div>
+<div class="card">
+<div class="irow"><span class="ik">Nome</span><span class="iv" id="ppn"></span></div>
+<div class="irow"><span class="ik">Telefono</span><span class="iv" id="ppt"></span></div>
+<div class="irow"><span class="ik">Email</span><span class="iv" id="ppe"></span></div>
+<div class="irow"><span class="ik">Indirizzo</span><span class="iv" id="ppa">—</span></div>
+<div class="irow"><span class="ik">Contatti preferiti</span><span class="iv" id="pppr"></span></div>
+</div>
+<button class="btn btns" onclick="openEditProf()">✏️ Modifica profilo</button>
+<button class="btn btns" onclick="openFam()">👨‍👩‍👧 Famiglia e Condivisione</button>
+<button class="btn btnd" onclick="doLogout()">Esci dall'account</button>
+</div>
+<div class="bnav">
+<div class="ni" id="tabhome2" onclick="tabH()"><span class="ico">🏠</span><span class="lbl">HOME</span></div>
+<div class="ni" id="tabscan2" onclick="tabS()"><span class="ico">📷</span><span class="lbl">SCANSIONA</span></div>
+<div class="ni on" id="tabprof2" onclick="tabP()"><span class="ico">👤</span><span class="lbl">PROFILO</span></div>
+</div>
+</div>
+
+<!-- SCAN TAB -->
+<div class="screen" id="sscan">
+<div class="body" style="padding-top:80px;text-align:center">
+<span style="font-size:72px">📷</span>
+<div class="stitle" style="margin-top:20px">Scansiona un QR Code</div>
+<p class="ssub" style="text-align:center">Usa la fotocamera di iPhone puntandola sul QR Code della targhetta.</p>
+<div class="card" style="text-align:left;margin-top:24px">
+<div style="font-size:15px;font-weight:600;margin-bottom:12px">Come scansionare:</div>
+<div style="font-size:14px;color:var(--muted);line-height:2">1. Apri l'app Fotocamera<br>2. Punta sul QR Code<br>3. Tocca la notifica che appare<br>4. Vedi i dati dell'animale</div>
+</div>
+<div class="divider"></div>
+<div style="font-size:14px;color:var(--muted)">Oppure inserisci il codice manualmente:</div>
+<div class="fg" style="margin-top:12px"><input class="inp" type="text" id="mancode" placeholder="es. PT-2024-XXXX"></div>
+<button class="btn btnp" onclick="doManual()">Cerca</button>
+</div>
+<div class="bnav">
+<div class="ni" onclick="tabH()"><span class="ico">🏠</span><span class="lbl">HOME</span></div>
+<div class="ni on" onclick="tabS()"><span class="ico">📷</span><span class="lbl">SCANSIONA</span></div>
+<div class="ni" onclick="tabP()"><span class="ico">👤</span><span class="lbl">PROFILO</span></div>
+</div>
+</div>
+
+<!-- FOUND PET -->
+<div class="screen" id="sfound">
+<div class="body" style="padding-top:0;padding-bottom:60px">
+<div class="fhero">
+<span class="ficon" id="femic">🐶</span>
+<div class="ftitle">Ho trovato <span id="femname">questo animale</span>!</div>
+<p style="color:var(--muted);font-size:15px;line-height:1.6">Scansionando la targhetta PetFinder hai trovato le informazioni per contattare il proprietario.</p>
+</div>
+<div style="padding:0 24px">
+<div class="stitle">Chi contattare</div>
+<div id="fcontacts"></div>
+<div class="divider"></div>
+<div class="stitle">Dati dell'animale</div>
+<div class="card" id="fpetinfo"></div>
+<div class="divider"></div>
+<div class="mapbox">
+<div style="font-size:32px">📍</div>
+<div style="font-size:15px;font-weight:600;margin-top:8px;color:var(--success)">Posizione rilevata</div>
+<div style="font-size:13px;color:var(--muted);margin-top:4px" id="floc">Acquisizione GPS...</div>
+</div>
+<div class="card" style="background:rgba(232,200,109,.06);border-color:rgba(232,200,109,.2)">
+<div style="font-size:13px;color:var(--muted);line-height:1.7">🙏 <strong style="color:var(--accent)">Grazie di cuore!</strong> Il tuo gesto fa la differenza. Il proprietario è stato avvisato.</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- FAMIGLIA -->
+<div class="screen" id="sfam">
+<div class="hdr"><div class="back" onclick="tabP()">←</div><div class="htitle">Famiglia e Condivisione</div></div>
+<div class="body">
+<div id="invbox"></div>
+<div class="stitle">👨‍👩‍👧 La mia famiglia</div>
+<p class="ssub">Persone che gestiscono i tuoi animali insieme a te.</p>
+<div id="fambox"></div>
+<button class="btn btnp" onclick="go('sinvita')">➕ Invita una persona</button>
+<div class="divider"></div>
+<div class="stitle">🔗 Condivisioni singole</div>
+<p class="ssub">Animali condivisi con persone specifiche.</p>
+<div id="condbox"></div>
+<button class="btn btns" onclick="openCond()">🐾 Condividi un animale</button>
+</div>
+</div>
+
+<!-- INVITA -->
+<div class="screen" id="sinvita">
+<div class="hdr"><div class="back" onclick="go('sfam')">←</div><div class="htitle">Invita nella famiglia</div></div>
+<div class="body">
+<div style="text-align:center;padding:20px 0 28px;font-size:56px">👨‍👩‍👧</div>
+<p class="ssub">Inserisci l'email di un utente PetFinder registrato.</p>
+<div class="fg"><label class="lbl2">Email</label><input class="inp" type="email" id="invemail" placeholder="laura@email.com"></div>
+<div class="fg"><label class="lbl2">Permessi</label>
+<label class="rcard"><input type="radio" name="invr" value="admin"><div><div style="font-weight:600">👑 Amministratore</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Aggiunge, modifica ed elimina animali</div></div></label>
+<label class="rcard"><input type="radio" name="invr" value="editor" checked><div><div style="font-weight:600">✏️ Editor</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Modifica i dati ma non elimina</div></div></label>
+<label class="rcard"><input type="radio" name="invr" value="viewer"><div><div style="font-weight:600">👁 Visualizzatore</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Solo lettura</div></div></label>
+</div>
+<button class="btn btnp" onclick="doInvita()">Invia Invito</button>
+</div>
+</div>
+
+<!-- CONDIVIDI -->
+<div class="screen" id="scond">
+<div class="hdr"><div class="back" onclick="go('sfam')">←</div><div class="htitle">Condividi Animale</div></div>
+<div class="body">
+<p class="ssub">Scegli l'animale e la persona con cui condividerlo.</p>
+<div class="fg"><label class="lbl2">Animale</label><select class="inp" id="condpet"></select></div>
+<div class="fg"><label class="lbl2">Email</label><input class="inp" type="email" id="condemail" placeholder="marco@email.com"></div>
+<div class="fg"><label class="lbl2">Permessi</label>
+<label class="rcard"><input type="radio" name="condr" value="editor" checked><div><div style="font-weight:600">✏️ Può modificare</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Modifica nome, foto e dati</div></div></label>
+<label class="rcard"><input type="radio" name="condr" value="viewer"><div><div style="font-weight:600">👁 Solo visualizzazione</div><div style="font-size:13px;color:var(--muted);margin-top:2px">Vede i dati ma non modifica</div></div></label>
+</div>
+<button class="btn btnp" onclick="doCond()">Condividi</button>
+</div>
+</div>
+
+<!-- MODAL EDIT PROFILE -->
+<div class="movl" id="medit">
+<div class="modal">
+<div class="mhandle"></div>
+<div class="mtitle">Modifica Profilo</div>
+<div class="fg"><label class="lbl2">Nome</label><input class="inp" type="text" id="epn"></div>
+<div class="fg"><label class="lbl2">Telefono</label><input class="inp" type="tel" id="ept"></div>
+<div class="fg"><label class="lbl2">Indirizzo</label><input class="inp" type="text" id="epa"></div>
+<div class="fg"><label class="lbl2">Contatti preferiti</label>
+<div class="chipg" id="eppr">
+<button class="chip" onclick="tchip(this)">📞 Chiamata</button>
+<button class="chip" onclick="tchip(this)">💬 WhatsApp</button>
+<button class="chip" onclick="tchip(this)">✉️ SMS</button>
+</div></div>
+<button class="btn btnp" onclick="doSaveProf()">Salva Modifiche</button>
+<button class="btn btns" onclick="closem('medit')">Annulla</button>
+</div>
+</div>
+
+<script>
+
+var D = JSON.parse(localStorage.getItem('PF') || '{"u":{},"t":{},"inv":[],"cond":[]}');
+var ME = localStorage.getItem('PFme') || null;
+var PHOTO = null;
+var CURPET = null;
+
+function sv() { localStorage.setItem('PF', JSON.stringify(D)); }
+function me() { return D.u[ME]; }
+function go(id) { document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');}); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function toast(m,d) { var t=document.getElementById('T'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},d||2500); }
+function closem(id) { document.getElementById(id).classList.remove('open'); }
+function openm(id) { document.getElementById(id).classList.add('open'); }
+function tchip(el) { el.classList.toggle('on'); }
+function chips(id) { var r=[]; document.querySelectorAll('#'+id+' .chip.on').forEach(function(c){r.push(c.textContent.trim());}); return r; }
+function setchips(id,vals) { document.querySelectorAll('#'+id+' .chip').forEach(function(c){c.classList.remove('on');}); if(!vals) return; document.querySelectorAll('#'+id+' .chip').forEach(function(c){ vals.forEach(function(v){ if(c.textContent.indexOf(v.replace(/\W/g,''))>-1) c.classList.add('on'); }); }); }
+function tpwd(id,btn) { var i=document.getElementById(id); if(i.type==='password'){i.type='text';btn.textContent='\u{1F648}';}else{i.type='password';btn.textContent='\u{1F441}';} }
+function tsince(iso) { var d=(Date.now()-new Date(iso))/1000; if(d<60) return 'Ora'; if(d<3600) return Math.floor(d/60)+' min fa'; if(d<86400) return Math.floor(d/3600)+' ore fa'; return Math.floor(d/86400)+' gg fa'; }
+function etype(t) { var m={dog:'\u{1F436}',cat:'\u{1F431}',rabbit:'\u{1F430}',bird:'\u{1F426}',other:'\u{1F439}'}; return m[t]||'\u{1F43E}'; }
+function irow(k,v) { if(!v) return ''; return '<div class="irow"><span class="ik">'+k+'</span><span class="iv">'+v+'</span></div>'; }
+
+function doReg() {
+  var n=document.getElementById('rn').value.trim();
+  var e=document.getElementById('re').value.trim().toLowerCase();
+  var p=document.getElementById('rp').value;
+  var p2=document.getElementById('rp2').value;
+  var t=document.getElementById('rt').value.trim();
+  var a=document.getElementById('ra').value.trim();
+  var pr=chips('rprefs');
+  if(!n) return toast('Nome obbligatorio');
+  if(!e||e.indexOf('@')<0) return toast('Email non valida');
+  if(p.length<6) return toast('Password: minimo 6 caratteri');
+  if(p!==p2) return toast('Le password non coincidono');
+  if(!t) return toast('Telefono obbligatorio');
+  if(D.u[e]) return toast('Email gia registrata');
+  D.u[e]={n:n,e:e,pwd:btoa(p+e),t:t,a:a,pr:pr,pets:{},notifs:[]};
+  sv(); ME=e; localStorage.setItem('PFme',e);
+  renderHome(); go('shome'); toast('Benvenuto '+n.split(' ')[0]+'!');
+}
+
+function doLogin() {
+  var e=document.getElementById('le').value.trim().toLowerCase();
+  var p=document.getElementById('lp').value;
+  if(!e||!p) return toast('Inserisci email e password');
+  var u=D.u[e]; if(!u) return toast('Account non trovato');
+  if(u.pwd!==btoa(p+e)) return toast('Password errata');
+  ME=e; localStorage.setItem('PFme',e);
+  renderHome(); go('shome'); toast('Bentornato '+u.n.split(' ')[0]+'!');
+}
+
+function doForgot() {
+  var e=document.getElementById('fge').value.trim().toLowerCase();
+  var u=D.u[e]; if(!u) return toast('Account non trovato');
+  try { var d=atob(u.pwd).replace(e,''); toast('La password inizia con: '+d.substring(0,2)+'***',4000); }
+  catch(ex) { toast('Impossibile recuperare'); }
+}
+
+function doLogout() { ME=null; localStorage.removeItem('PFme'); go('sw'); }
+
+function hphoto(inp) {
+  var f=inp.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(ev) {
+    PHOTO=ev.target.result;
+    document.getElementById('phwrap').innerHTML='<img src="'+PHOTO+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  };
+  r.readAsDataURL(f);
+}
+
+function doAddPet() {
+  var n=document.getElementById('pn').value.trim();
+  if(!n) return toast('Inserisci il nome');
+  var id='p'+Date.now();
+  me().pets[id]={
+    id:id, n:n,
+    type:document.getElementById('pt').value,
+    br:document.getElementById('pbr').value.trim(),
+    col:document.getElementById('pc').value.trim(),
+    age:document.getElementById('pa').value.trim(),
+    sex:document.getElementById('ps').value,
+    marks:document.getElementById('pm').value.trim(),
+    chip:document.getElementById('pch').value.trim(),
+    med:document.getElementById('pmed').value.trim(),
+    photo:PHOTO, tag:null
+  };
+  sv(); PHOTO=null;
+  document.getElementById('phwrap').innerHTML='<span style="font-size:32px">\u{1F4F7}</span><span style="font-size:11px;color:var(--muted);margin-top:4px">Aggiungi foto</span>';
+  ['pn','pbr','pc','pa','pm','pch','pmed'].forEach(function(x){document.getElementById(x).value='';});
+  renderHome(); go('shome'); toast(n+' aggiunto!');
+}
+
+function viewPet(petId, ownerEmail, role) {
+  var isOwner = !ownerEmail;
+  var owner = isOwner ? me() : D.u[ownerEmail];
+  var pet = owner && owner.pets ? owner.pets[petId] : null;
+  if(!pet) return toast('Animale non trovato');
+  CURPET=petId;
+  document.getElementById('dettitle').textContent=pet.n;
+  var canDel = isOwner || role==='admin';
+  var em = etype(pet.type);
+  var ph = pet.photo ? '<img src="'+pet.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : em;
+  var taghtml = '';
+  if(isOwner) {
+    if(pet.tag) {
+      taghtml = '<span class="badge bs" style="margin-bottom:16px;display:inline-flex">Targhetta: '+pet.tag+'</span>';
+      taghtml += '<button class="btn btns" onclick="showQR(\''+petId+'\')">QR Code</button>';
+      taghtml += '<button class="btn btnd" style="margin-top:10px" onclick="unlink(\''+petId+'\')">Scollega targhetta</button>';
+    } else {
+      taghtml = '<span class="badge bg" style="margin-bottom:16px;display:inline-flex">Nessuna targhetta</span>';
+      taghtml += '<button class="btn btnp" onclick="goLink(\''+petId+'\')">Collega Targhetta</button>';
+    }
+  }
+  var note = !isOwner ? '<div class="card" style="margin-top:12px;text-align:center;color:var(--muted);font-size:14px">Proprietario: '+owner.n+' Ruolo: '+role+'</div>' : '';
+  var html = '<div style="text-align:center;margin-bottom:24px">';
+  html += '<div class="ava-big" style="width:100px;height:100px;font-size:48px">'+ph+'</div>';
+  html += '<div style="font-family:Playfair Display,serif;font-size:28px;font-weight:700;margin-top:12px">'+pet.n+'</div>';
+  html += '<div style="color:var(--muted);margin-top:4px">'+(pet.br||'')+(pet.sex?' - '+pet.sex:'')+'</div></div>';
+  html += '<div class="stitle">Dati</div><div class="card">';
+  html += irow('Tipo',em+(pet.br?' - '+pet.br:''));
+  html += irow('Colore',pet.col)+irow('Eta',pet.age)+irow('Sesso',pet.sex)+irow('Segni particolari',pet.marks);
+  if(pet.chip) html += irow('Microchip',pet.chip);
+  if(pet.med) html += irow('Note mediche',pet.med);
+  html += '</div>';
+  if(isOwner) html += '<div class="stitle" style="margin-top:20px">Targhetta</div><div class="card" style="text-align:center">'+taghtml+'</div>';
+  html += note;
+  if(canDel) html += '<button class="btn btnd" style="margin-top:16px;opacity:.7" onclick="delPet(\''+petId+'\')">Elimina animale</button>';
+  document.getElementById('detbody').innerHTML=html;
+  go('sdet');
+}
+
+function delPet(petId) {
+  if(!confirm('Eliminare questo animale?')) return;
+  delete me().pets[petId]; sv(); renderHome(); go('shome'); toast('Eliminato');
+}
+
+function goLink(petId) {
+  CURPET=petId;
+  document.getElementById('linkback').onclick=function(){viewPet(petId);};
+  document.getElementById('tagcode').value='';
+  go('slink');
+}
+
+function doLink() {
+  var code=document.getElementById('tagcode').value.trim().toUpperCase();
+  if(!code) return toast('Inserisci il codice');
+  if(D.t[code]&&D.t[code].owner!==ME) return toast('Targhetta gia in uso');
+  me().pets[CURPET].tag=code;
+  D.t[code]={owner:ME,petId:CURPET};
+  sv(); toast('Targhetta collegata!'); viewPet(CURPET);
+}
+
+function unlink(petId) {
+  var pet=me().pets[petId];
+  if(pet.tag) delete D.t[pet.tag];
+  pet.tag=null; sv(); toast('Targhetta scollegata'); viewPet(petId);
+}
+
+function showQR(petId) {
+  var pet=me().pets[petId];
+  document.getElementById('qrname').textContent=pet.n;
+  document.getElementById('qrtag').textContent='Codice: '+pet.tag;
+  document.getElementById('qrback').onclick=function(){viewPet(petId);};
+  var box=document.getElementById('qrbox'); box.innerHTML='';
+  var url=window.location.href.split('?')[0]+'?tag='+pet.tag;
+  new QRCode(box,{text:url,width:220,height:220,colorDark:'#1a1a2e',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  go('sqr');
+}
+
+function doShareQR() {
+  if(navigator.share) navigator.share({title:'PetFinder QR',url:window.location.href});
+  else toast('Usa il tasto condividi del browser');
+}
+
+function renderHome() {
+  if(!ME||!D.u[ME]) return;
+  var u=me();
+  var notifs=(u.notifs||[]).slice(-3).reverse();
+  var nh='';
+  for(var i=0;i<notifs.length;i++) {
+    var nf=notifs[i];
+    nh+='<div class="sbanner" onclick="viewPet(\''+nf.pid+'\')"><span style="font-size:28px">\u{1F514}</span>';
+    nh+='<div><div style="font-weight:600;font-size:15px;color:var(--success)">'+nf.pn+' scansionato!</div>';
+    nh+='<div style="font-size:13px;color:var(--muted);margin-top:2px">'+(nf.loc||'')+' - '+tsince(nf.time)+'</div></div></div>';
+  }
+  document.getElementById('notifarea').innerHTML=nh;
+  var pets=Object.values(u.pets||{});
+  var h='';
+  if(pets.length===0) {
+    h='<div style="text-align:center;padding:40px 0"><div style="font-size:56px">\u{1F43E}</div><div style="font-family:Playfair Display,serif;font-size:20px;margin:16px 0 8px">Nessun animale ancora</div><p style="color:var(--muted);font-size:14px">Aggiungi il tuo primo animale!</p></div>';
+  } else {
+    for(var j=0;j<pets.length;j++) {
+      var p=pets[j], em=etype(p.type);
+      var ph=p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover">':'<span>'+em+'</span>';
+      var ts=p.tag?'<span class="tdot on"></span><span style="font-size:12px;color:var(--success)">Targhetta collegata</span>':'<span class="tdot off"></span><span style="font-size:12px;color:var(--muted)">Nessuna targhetta</span>';
+      h+='<div class="pcard" onclick="viewPet(\''+p.id+'\')">';
+      h+='<div class="ava">'+ph+'</div>';
+      h+='<div style="flex:1"><div style="font-family:Playfair Display,serif;font-size:18px;font-weight:700">'+p.n+'</div>';
+      h+='<div style="font-size:13px;color:var(--muted);margin-top:2px">'+(p.br||em)+'</div>';
+      h+='<div style="display:flex;align-items:center;margin-top:4px">'+ts+'</div></div>';
+      h+='<div style="font-size:20px;color:var(--muted)">></div></div>';
+    }
+  }
+  var shared=getShared();
+  if(shared.length>0) {
+    h+='<div class="stitle" style="margin-top:24px">Condivisi con me</div>';
+    for(var k=0;k<shared.length;k++) {
+      var s=shared[k], sp=s.pet, sem=etype(sp.type);
+      var sph=sp.photo?'<img src="'+sp.photo+'" style="width:100%;height:100%;object-fit:cover">':'<span>'+sem+'</span>';
+      var srl=s.role==='admin'?'Admin':s.role==='editor'?'Editor':'Viewer';
+      h+='<div class="pcard" onclick="viewPet(\''+sp.id+'\',\''+s.oe+'\',\''+s.role+'\')">';
+      h+='<div class="ava">'+sph+'</div>';
+      h+='<div style="flex:1"><div style="font-family:Playfair Display,serif;font-size:18px;font-weight:700">'+sp.n+'</div>';
+      h+='<div style="font-size:13px;color:var(--muted);margin-top:2px">'+s.on+'</div>';
+      h+='<div style="margin-top:4px"><span class="badge bg">'+srl+'</span></div></div>';
+      h+='<div style="font-size:20px;color:var(--muted)">></div></div>';
+    }
+  }
+  document.getElementById('petlist').innerHTML=h;
+}
+
+function getShared() {
+  var res=[], invs=D.inv||[], conds=D.cond||[];
+  for(var i=0;i<invs.length;i++) {
+    var inv=invs[i];
+    if(inv.to===ME&&inv.status==='ok'&&inv.type==='fam') {
+      var ow=D.u[inv.from]; if(!ow) continue;
+      Object.values(ow.pets||{}).forEach(function(pt){ res.push({pet:pt,oe:inv.from,on:ow.n,role:inv.role}); });
+    }
+  }
+  for(var j=0;j<conds.length;j++) {
+    var c=conds[j];
+    if(c.to===ME) {
+      var ow2=D.u[c.from]; if(!ow2) continue;
+      var pt=ow2.pets&&ow2.pets[c.pid]; if(!pt) continue;
+      res.push({pet:pt,oe:c.from,on:ow2.n,role:c.role});
+    }
+  }
+  return res;
+}
+
+function renderProfile() {
+  var u=me(); if(!u) return;
+  document.getElementById('profname').textContent=u.n;
+  document.getElementById('profphone').textContent=u.t;
+  document.getElementById('ppn').textContent=u.n;
+  document.getElementById('ppt').textContent=u.t;
+  document.getElementById('ppe').textContent=u.e||'';
+  document.getElementById('ppa').textContent=u.a||'Non specificato';
+  document.getElementById('pppr').textContent=(u.pr||[]).join(', ')||'Non specificato';
+}
+
+function openEditProf() {
+  var u=me();
+  document.getElementById('epn').value=u.n;
+  document.getElementById('ept').value=u.t;
+  document.getElementById('epa').value=u.a||'';
+  setchips('eppr',u.pr);
+  openm('medit');
+}
+
+function doSaveProf() {
+  var u=me();
+  u.n=document.getElementById('epn').value.trim()||u.n;
+  u.t=document.getElementById('ept').value.trim()||u.t;
+  u.a=document.getElementById('epa').value.trim();
+  u.pr=chips('eppr');
+  sv(); closem('medit'); renderProfile(); toast('Profilo aggiornato!');
+}
+
+function tabH() {
+  renderHome(); go('shome');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  ['tabhome','tabhome2'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('on');});
+}
+function tabS() {
+  go('sscan');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  ['tabscan','tabscan2'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('on');});
+}
+function tabP() {
+  renderProfile(); go('sprof');
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
+  ['tabprof','tabprof2'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('on');});
+}
+
+function doManual() {
+  var code=document.getElementById('mancode').value.trim().toUpperCase();
+  if(!code) return toast('Inserisci un codice');
+  showFound(code);
+}
+
+function showFound(tagCode) {
+  var tag=D.t[tagCode];
+  if(!tag) {
+    document.getElementById('femname').textContent='sconosciuto';
+    document.getElementById('femic').textContent='?';
+    document.getElementById('fcontacts').innerHTML='';
+    document.getElementById('fpetinfo').innerHTML='<p style="color:var(--muted)">Targhetta non registrata.</p>';
+    go('sfound'); return;
+  }
+  var owner=D.u[tag.owner], pet=owner.pets[tag.petId];
+  document.getElementById('femname').textContent=pet.n;
+  document.getElementById('femic').textContent=etype(pet.type);
+  var ph=owner.t.replace(/\s/g,''), prefs=owner.pr||[], btns='';
+  for(var i=0;i<prefs.length;i++) {
+    var pref=prefs[i];
+    if(pref.indexOf('Chiamata')>-1) btns+='<a class="cbtn" href="tel:'+ph+'"><div class="cico" style="background:rgba(82,183,136,.15)">\u{1F4DE}</div><div><div style="font-weight:600">Chiama il proprietario</div><div style="font-size:13px;color:var(--muted);margin-top:2px">'+owner.t+'</div></div></a>';
+    if(pref.indexOf('WhatsApp')>-1) btns+='<a class="cbtn" href="https://wa.me/'+ph.replace('+','')+'?text=Ho trovato '+pet.n+'" target="_blank"><div class="cico" style="background:rgba(37,211,102,.12)">\u{1F4AC}</div><div><div style="font-weight:600">Scrivi su WhatsApp</div><div style="font-size:13px;color:var(--muted);margin-top:2px">'+owner.t+'</div></div></a>';
+    if(pref.indexOf('SMS')>-1) btns+='<a class="cbtn" href="sms:'+ph+'"><div class="cico" style="background:rgba(0,122,255,.12)">\u{2709}</div><div><div style="font-weight:600">Invia SMS</div><div style="font-size:13px;color:var(--muted);margin-top:2px">'+owner.t+'</div></div></a>';
+  }
+  document.getElementById('fcontacts').innerHTML=btns;
+  var pi=(pet.photo?'<img src="'+pet.photo+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 16px">':'')+irow('Nome',pet.n)+irow('Razza',pet.br)+irow('Colore',pet.col)+irow('Eta',pet.age)+irow('Sesso',pet.sex)+(pet.marks?irow('Segni',pet.marks):'')+(pet.chip?irow('Microchip',pet.chip):'');
+  document.getElementById('fpetinfo').innerHTML=pi;
+  if(navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      var lat=pos.coords.latitude.toFixed(4), lng=pos.coords.longitude.toFixed(4);
+      document.getElementById('floc').textContent=lat+', '+lng;
+      if(!owner.notifs) owner.notifs=[];
+      owner.notifs.push({pid:tag.petId,pn:pet.n,time:new Date().toISOString(),loc:lat+', '+lng});
+      if(owner.notifs.length>20) owner.notifs=owner.notifs.slice(-20);
+      sv();
+    }, function(){ document.getElementById('floc').textContent='Posizione non disponibile'; });
+  }
+  go('sfound');
+}
+
+function openFam() { renderFam(); go('sfam'); }
+
+function renderFam() {
+  var invRic=(D.inv||[]).filter(function(i){return i.to===ME&&i.status==='pending';});
+  var ib=document.getElementById('invbox');
+  if(invRic.length>0) {
+    var ih='<div class="stitle">Inviti ricevuti</div>';
+    for(var i=0;i<invRic.length;i++) {
+      var inv=invRic[i], mit=D.u[inv.from];
+      var rl=inv.role==='admin'?'Admin':inv.role==='editor'?'Editor':'Viewer';
+      ih+='<div class="card" style="border-color:rgba(232,200,109,.3)">';
+      ih+='<div style="font-weight:600;margin-bottom:4px">'+(mit?mit.n:inv.from)+' ti invita</div>';
+      ih+='<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Ruolo: '+rl+'</div>';
+      ih+='<div style="display:flex;gap:8px">';
+      ih+='<button class="btn btnp" style="padding:10px;font-size:14px" onclick="accInv(\''+inv.id+'\')">Accetta</button>';
+      ih+='<button class="btn btnd" style="padding:10px;font-size:14px" onclick="rifInv(\''+inv.id+'\')">Rifiuta</button>';
+      ih+='</div></div>';
+    }
+    ib.innerHTML=ih;
+  } else { ib.innerHTML=''; }
+
+  var fmem=(D.inv||[]).filter(function(i){return (i.from===ME||i.to===ME)&&i.status==='ok'&&i.type==='fam';});
+  var fb=document.getElementById('fambox');
+  if(fmem.length===0) { fb.innerHTML='<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:14px">Nessun membro. Invita qualcuno!</div>'; }
+  else {
+    var fh='';
+    for(var j=0;j<fmem.length;j++) {
+      var m=fmem[j], ae=m.from===ME?m.to:m.from, al=D.u[ae];
+      var ml=m.role==='admin'?'Admin':m.role==='editor'?'Editor':'Viewer';
+      fh+='<div class="pcard"><div class="ava" style="font-size:22px">\u{1F464}</div>';
+      fh+='<div style="flex:1"><div style="font-family:Playfair Display,serif;font-size:18px;font-weight:700">'+(al?al.n:ae)+'</div>';
+      fh+='<div style="font-size:13px;color:var(--muted);margin-top:2px">'+ae+'</div>';
+      fh+='<div style="margin-top:4px"><span class="badge bg">'+ml+'</span></div></div>';
+      if(m.from===ME) fh+='<button onclick="remMem(\''+m.id+'\')" style="background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer">X</button>';
+      fh+='</div>';
+    }
+    fb.innerHTML=fh;
+  }
+
+  var cl=(D.cond||[]).filter(function(c){return c.from===ME||c.to===ME;});
+  var cb=document.getElementById('condbox');
+  if(cl.length===0) { cb.innerHTML='<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:14px">Nessuna condivisione attiva.</div>'; }
+  else {
+    var ch='';
+    for(var k=0;k<cl.length;k++) {
+      var c=cl[k], ow=D.u[c.from], pt=ow&&ow.pets?ow.pets[c.pid]:null;
+      var ae2=c.from===ME?c.to:c.from, al2=D.u[ae2];
+      var dir=c.from===ME?('-> '+(al2?al2.n:ae2)):('<- '+(ow?ow.n:c.from));
+      var cl2=c.role==='editor'?'Editor':'Viewer';
+      ch+='<div class="pcard"><div class="ava" style="font-size:22px">'+(pt?etype(pt.type):'\u{1F43E}')+'</div>';
+      ch+='<div style="flex:1"><div style="font-family:Playfair Display,serif;font-size:18px;font-weight:700">'+(pt?pt.n:'Eliminato')+'</div>';
+      ch+='<div style="font-size:13px;color:var(--muted);margin-top:2px">'+dir+'</div>';
+      ch+='<div style="margin-top:4px"><span class="badge bg">'+cl2+'</span></div></div>';
+      if(c.from===ME) ch+='<button onclick="remCond(\''+c.id+'\')" style="background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer">X</button>';
+      ch+='</div>';
+    }
+    cb.innerHTML=ch;
+  }
+}
+
+function doInvita() {
+  var email=document.getElementById('invemail').value.trim().toLowerCase();
+  var radios=document.querySelectorAll('input[name="invr"]'), role='editor';
+  for(var i=0;i<radios.length;i++){if(radios[i].checked)role=radios[i].value;}
+  if(!email) return toast('Inserisci email');
+  if(email===ME) return toast('Non puoi invitare te stesso');
+  if(!D.u[email]) return toast('Utente non trovato su PetFinder');
+  if(!D.inv) D.inv=[];
+  for(var j=0;j<D.inv.length;j++){var iv=D.inv[j];if(iv.from===ME&&iv.to===email&&iv.type==='fam'&&iv.status==='pending') return toast('Invito gia inviato');}
+  D.inv.push({id:'i'+Date.now(),from:ME,to:email,role:role,type:'fam',status:'pending'});
+  sv(); document.getElementById('invemail').value=''; toast('Invito inviato a '+D.u[email].n+'!'); go('sfam'); renderFam();
+}
+
+function accInv(id) {
+  for(var i=0;i<D.inv.length;i++){if(D.inv[i].id===id){D.inv[i].status='ok';break;}}
+  sv(); toast('Sei entrato nella famiglia!'); renderFam();
+}
+function rifInv(id) { D.inv=D.inv.filter(function(i){return i.id!==id;}); sv(); toast('Invito rifiutato'); renderFam(); }
+function remMem(id) { if(!confirm('Rimuovere questo membro?')) return; D.inv=D.inv.filter(function(i){return i.id!==id;}); sv(); toast('Membro rimosso'); renderFam(); }
+
+function openCond() {
+  var pets=Object.values(me().pets||{});
+  var sel=document.getElementById('condpet');
+  if(pets.length===0){sel.innerHTML='<option>Nessun animale</option>';go('scond');return;}
+  var opts='';
+  for(var i=0;i<pets.length;i++) opts+='<option value="'+pets[i].id+'">'+etype(pets[i].type)+' '+pets[i].n+'</option>';
+  sel.innerHTML=opts; go('scond');
+}
+
+function doCond() {
+  var pid=document.getElementById('condpet').value;
+  var email=document.getElementById('condemail').value.trim().toLowerCase();
+  var radios=document.querySelectorAll('input[name="condr"]'), role='viewer';
+  for(var i=0;i<radios.length;i++){if(radios[i].checked)role=radios[i].value;}
+  if(!pid) return toast('Nessun animale');
+  if(!email) return toast('Inserisci email');
+  if(email===ME) return toast('Non puoi condividere con te stesso');
+  if(!D.u[email]) return toast('Utente non trovato');
+  if(!D.cond) D.cond=[];
+  for(var j=0;j<D.cond.length;j++){var c=D.cond[j];if(c.from===ME&&c.pid===pid&&c.to===email) return toast('Gia condiviso');}
+  D.cond.push({id:'c'+Date.now(),from:ME,to:email,pid:pid,role:role});
+  sv(); document.getElementById('condemail').value=''; toast('Condiviso con '+D.u[email].n+'!'); go('sfam'); renderFam();
+}
+
+function remCond(id) { if(!confirm('Rimuovere questa condivisione?')) return; D.cond=D.cond.filter(function(c){return c.id!==id;}); sv(); toast('Condivisione rimossa'); renderFam(); }
+
+window.addEventListener('DOMContentLoaded',function(){
+  if(!D.inv) D.inv=[];
+  if(!D.cond) D.cond=[];
+  var p=new URLSearchParams(window.location.search);
+  var tag=p.get('tag');
+  if(tag){showFound(tag.toUpperCase());return;}
+  if(ME&&D.u[ME]){renderHome();go('shome');}
+});
+
+</script>
+</body>
+</html>
